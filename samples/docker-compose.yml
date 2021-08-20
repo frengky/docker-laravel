@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+
+  redis:
+    image: redis:6-alpine
+    entrypoint: redis-server --appendonly yes
+    environment:
+      TZ: Asia/Jakarta
+    volumes:
+      - "redis-data:/data"
+    networks:
+      - web
+
+  app:
+    image: frengky/laravel:php8
+    environment:
+      TZ: Asia/Jakarta
+      PHP_INI_SENDMAIL_PATH: /usr/sbin/sendmail -S mailserver:3025 -t -i
+    ports:
+      - "8080:8080"
+    volumes:
+      - ".:/app"
+    networks:
+      - web
+
+  scheduler:
+    image: frengky/laravel:php8
+    command: crond -f -d 8
+    environment:
+      TZ: Asia/Jakarta
+      PHP_INI_SENDMAIL_PATH: /usr/sbin/sendmail -S mailserver:3025 -t -i
+    volumes:
+      - ".:/app"
+    networks:
+      - web
+    depends_on:
+      - app
+
+  worker:
+    image: frengky/laravel:php8
+    command: php artisan queue:work --verbose --tries=3 --timeout=60
+    environment:
+      TZ: Asia/Jakarta
+      PHP_INI_SENDMAIL_PATH: /usr/sbin/sendmail -S mailserver:3025 -t -i
+    volumes:
+      - ".:/app"
+    networks:
+      - web
+    depends_on:
+      - app
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  redis-data:
