@@ -21,9 +21,12 @@ COPY httpd-php8.conf /etc/apache2/httpd.conf
 COPY docker-entrypoint.php8.sh /usr/local/bin/docker-entrypoint.sh
 COPY wait-for-it.sh /usr/local/bin/
 
+ENV COMPOSER_HOME /tmp
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+
 #VOLUME /app
 WORKDIR /app
-#EXPOSE 8080
+EXPOSE 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["httpd", "-D", "FOREGROUND"]
